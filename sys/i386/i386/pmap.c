@@ -564,6 +564,8 @@ __CONCAT(PMTYPE, cold)(void)
 	/* Now enable paging */
 #ifdef PMAP_PAE_COMP
 	cr3 = (u_int)IdlePDPT;
+	if ((cpu_feature & CPUID_PAT) == 0)
+		wbinvd();
 #else
 	cr3 = (u_int)IdlePTD;
 #endif
@@ -2040,6 +2042,14 @@ __CONCAT(PMTYPE, pinit)(pmap_t pmap)
 	}
 
 	pmap_qenter((vm_offset_t)pmap->pm_pdir, pmap->pm_ptdpg, NPGPTD);
+#ifdef PMAP_PAE_COMP
+	if ((cpu_feature & CPUID_PAT) == 0) {
+		pmap_invalidate_cache_range(
+		    trunc_page((vm_offset_t)pmap->pm_pdpt),
+		    round_page((vm_offset_t)pmap->pm_pdpt +
+		    NPGPTD * sizeof(pdpt_entry_t)));
+	}
+#endif
 
 	for (i = 0; i < NPGPTD; i++)
 		if ((pmap->pm_ptdpg[i]->flags & PG_ZERO) == 0)
@@ -3801,7 +3811,7 @@ validate:
 		if ((origpte & PG_A) != 0)
 			pmap_invalidate_page_int(pmap, va);
 	} else
-		pte_store(pte, newpte);
+		pte_store_zero(pte, newpte);
 
 unchanged:
 
@@ -3872,6 +3882,8 @@ pmap_enter_pde(pmap_t pmap, vm_offset_t va, pd_entry_t newpde, u_int flags,
 	rw_assert(&pvh_global_lock, RA_WLOCKED);
 	KASSERT((newpde & (PG_M | PG_RW)) != PG_RW,
 	    ("pmap_enter_pde: newpde is missing PG_M"));
+	KASSERT(pmap == kernel_pmap || (newpde & PG_W) == 0,
+	    ("pmap_enter_pde: cannot create wired user mapping"));
 	PMAP_LOCK_ASSERT(pmap, MA_OWNED);
 	pde = pmap_pde(pmap, va);
 	oldpde = *pde;
@@ -4104,7 +4116,7 @@ pmap_enter_quick_locked(pmap_t pmap, vm_offset_t va, vm_page_t m,
 #endif
 	if (pmap != kernel_pmap)
 		newpte |= PG_U;
-	pte_store(pte, newpte);
+	pte_store_zero(pte, newpte);
 	sched_unpin();
 	return (mpte);
 }
