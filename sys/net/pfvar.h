@@ -632,6 +632,14 @@ struct pf_rule {
 #define PFRULE_REASSEMBLE_TCP	0x1000
 #define PFRULE_SET_TOS		0x2000
 
+/* rule flags for TOS or DSCP differentiation */
+#define PFRULE_TOS             0x2000
+#define PFRULE_DSCP            0x4000
+
+/* rule flags for handling ALTQ hashing required by certain disciplines */
+#define PFRULE_ALTQ_HASH       0x8000
+
+
 /* rule flags again */
 #define PFRULE_IFBOUND		0x00010000	/* if-bound */
 #define PFRULE_STATESLOPPY	0x00020000	/* sloppy state tracking */
