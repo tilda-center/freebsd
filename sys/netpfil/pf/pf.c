@@ -91,9 +91,11 @@ __FBSDID("$FreeBSD$");
 #include <netinet/udp.h>
 #include <netinet/udp_var.h>
 
-#include <netpfil/ipfw/ip_fw_private.h> /* XXX: only for DIR_IN/DIR_OUT */
 #include <netinet/ip_fw.h>
 #include <netinet/ip_dummynet.h>
+#include <netpfil/ipfw/dn_heap.h>
+#include <netpfil/ipfw/ip_fw_private.h>
+#include <netpfil/ipfw/ip_dn_private.h> /* XXX: only for DIR_IN/DIR_OUT */
 
 #ifdef INET6
 #include <netinet/ip6.h>
@@ -6375,9 +6377,13 @@ done:
 		if (s != NULL && s->nat_rule.ptr)
 			pf_packet_undo_nat(m, &pd, off, s, dir);
 
-		ip_dn_io_ptr(m0,
-			(dir == PF_IN) ? DIR_IN : DIR_OUT,
-			&dnflow);
+    if (dir == PF_IN) {
+      dnflow.flags |= IPFW_ARGS_IN;
+    }
+		ip_dn_io_ptr(m0, &dnflow);
+		/* ip_dn_io_ptr(m0, */
+			/* (dir == PF_IN) ? DIR_IN : DIR_OUT, */
+			/* &dnflow); */
 		/* This is dummynet fast io processing */
 		if (*m0 != NULL) {
 			m_tag_delete(*m0, m_tag_first(*m0));
@@ -6892,9 +6898,13 @@ done:
 		if (s != NULL && s->nat_rule.ptr)
 			pf_packet_undo_nat(m, &pd, off, s, dir);
 
-		ip_dn_io_ptr(m0,
-			((dir == PF_IN) ? DIR_IN : DIR_OUT) | PROTO_IPV6,
-			&dnflow);
+    if (dir == PF_IN) {
+      dnflow.flags |= IPFW_ARGS_IN;
+    }
+		ip_dn_io_ptr(m0, &dnflow);
+		/* ip_dn_io_ptr(m0, */
+			/* ((dir == PF_IN) ? DIR_IN : DIR_OUT) | PROTO_IPV6, */
+			/* &dnflow); */
 		/* This is dummynet fast io processing */
 		if (*m0 != NULL) {
 			m_tag_delete(*m0, m_tag_first(*m0));
