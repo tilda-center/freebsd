@@ -479,6 +479,13 @@ struct pf_osfp_ioctl {
 
 	int			fp_getnum;	/* DIOCOSFPGET number */
 };
+struct pf_rule_actions {
+       u_int16_t       qid;
+       u_int16_t       pqid;
+       u_int32_t       pdnpipe;
+       u_int32_t       dnpipe;
+       u_int8_t        flags;
+};
 
 
 union pf_rule_ptr {
@@ -503,6 +510,7 @@ struct pf_rule {
 	union pf_rule_ptr	 skip[PF_SKIP_COUNT];
 #define PF_RULE_LABEL_SIZE	 64
 	char			 label[PF_RULE_LABEL_SIZE];
+  char       schedule[PF_RULE_LABEL_SIZE];
 	char			 ifname[IFNAMSIZ];
 	char			 qname[PF_QNAME_SIZE];
 	char			 pqname[PF_QNAME_SIZE];
@@ -752,6 +760,9 @@ struct pf_state {
 	u_int32_t		 creation;
 	u_int32_t	 	 expire;
 	u_int32_t		 pfsync_time;
+  u_int16_t    qid;
+  u_int16_t    pqid;
+  u_int32_t    pdnpipe;
 	u_int16_t		 tag;
 	u_int8_t		 log;
 	u_int8_t		 state_flags;
@@ -760,6 +771,8 @@ struct pf_state {
 /*  was	PFSTATE_PFLOW		0x04 */
 #define	PFSTATE_NOSYNC		0x08
 #define	PFSTATE_ACK		0x10
+#define PFRULE_DN_IS_PIPE   0x40
+#define PFRULE_DN_IS_QUEUE  0x80
 #define	PFSTATE_SETPRIO		0x0200
 #define	PFSTATE_SETMASK   (PFSTATE_SETPRIO)
 	u_int8_t		 timeout;
@@ -1143,6 +1156,7 @@ struct pf_pdesc {
 	u_int16_t *sport;
 	u_int16_t *dport;
 	struct pf_mtag	*pf_mtag;
+  struct pf_rule_actions  act;
 
 	u_int32_t	 p_len;		/* total length of payload */
 
@@ -1306,6 +1320,12 @@ struct pfioc_state_kill {
 	char			psk_label[PF_RULE_LABEL_SIZE];
 	u_int			psk_killed;
 };
+
+struct pfioc_schedule_kill {
+       int             numberkilled;
+       char            schedule[PF_RULE_LABEL_SIZE];
+};
+
 
 struct pfioc_states {
 	int	ps_len;
@@ -1543,6 +1563,7 @@ struct pf_ifspeed_v1 {
 
 #define	DIOCGIFSPEEDV0	_IOWR('D', 92, struct pf_ifspeed_v0)
 #define	DIOCGIFSPEEDV1	_IOWR('D', 92, struct pf_ifspeed_v1)
+#define DIOCKILLSCHEDULE _IOWR('D', 96, struct pfioc_schedule_kill)
 
 /*
  * Compatibility and convenience macros
