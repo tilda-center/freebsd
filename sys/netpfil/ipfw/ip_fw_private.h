@@ -256,7 +256,7 @@ struct tables_config;
 /*
  * Here we have the structure representing an ipfw rule.
  *
- * It starts with a general area 
+ * It starts with a general area
  * followed by an array of one or more instructions, which the code
  * accesses as an array of 32-bit values.
  *
@@ -527,7 +527,7 @@ struct ip_fw_bcounter0 {
  * RULE _U_ SIZE _V_ ->
  * get user size version _V_ from kernel rule
  * RULESIZE _V_ ->
- * get user size rule length 
+ * get user size rule length
  */
 /* FreeBSD8 <> current kernel format */
 #define	RULEUSIZE0(r)	(sizeof(struct ip_fw_rule0) + (r)->cmd_len * 4 - 4)
