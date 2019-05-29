@@ -28,7 +28,7 @@
 /* XXX there are several sysctl leftover here */
 #include <sys/sysctl.h>
 
-#include "ipfw2.h"
+#include "dnctl.h"
 
 #ifdef NEW_AQM
 #include <stdint.h>

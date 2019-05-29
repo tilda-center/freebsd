@@ -26,7 +26,7 @@
 #include <sys/sockio.h>
 #include <sys/sysctl.h>
 
-#include "ipfw2.h"
+#include "dnctl.h"
 
 #include <ctype.h>
 #include <err.h>
@@ -2683,12 +2683,10 @@ ipfw_list(int ac, char *av[], int show_counters)
 		sfo.flags |= IPFW_CFG_GET_STATES;
 	if ((sfo.show_counters | sfo.show_time) != 0)
 		sfo.flags |= IPFW_CFG_GET_COUNTERS;
-	if (ipfw_get_config(&co, &sfo, &cfg, &sz) != 0)
-		err(EX_OSERR, "retrieving config failed");
 
-	error = ipfw_show_config(&co, &sfo, cfg, sz, ac, av);
+  error = ipfw_show_config(&co, &sfo, cfg, sz, ac, av);
 
-	free(cfg);
+	/* free(cfg); */
 
 	if (error != EX_OK)
 		exit(error);
@@ -5110,9 +5108,6 @@ ipfw_add(char *av[])
 		ctlv->head.length = sizeof(ipfw_obj_ctlv) + rlen;
 		ctlv->count = 1;
 	}
-
-	if (do_get3(IP_FW_XADD, op3, &sz) != 0)
-		err(EX_UNAVAILABLE, "getsockopt(%s)", "IP_FW_XADD");
 
 	if (!co.do_quiet) {
 		struct format_opts sfo;
