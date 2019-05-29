@@ -9,6 +9,7 @@ SUBDIR=adjkerntz \
 	comcontrol \
 	conscontrol \
 	ddb \
+	dnctl \
 	devfs \
 	devmatch \
 	dhclient \
