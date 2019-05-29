@@ -4,7 +4,7 @@
 
 PACKAGE=dnctl
 PROG=	dnctl
-SRCS=	ipfw2.c dummynet.c main.c
+SRCS=	dnctl.c dummynet.c main.c
 WARNS?=	2
 
 LIBADD=	jail util

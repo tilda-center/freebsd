@@ -31,7 +31,7 @@
 #include <sysexits.h>
 #include <unistd.h>
 
-#include "ipfw2.h"
+#include "dnctl.h"
 
 static void
 help(void)
