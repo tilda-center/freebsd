@@ -1,0 +1,109 @@
+// Document to help understand pf code
+
+Pf's user space, and pf.conf is loaded and managed with pfctl .
+All pfctl action is implemented here, from main pfctl commands (pfctl.c) to parsing of the conf file (pfctl_parser.c)
+After config is parsed rules are passed to kernel with ioctl calls. Pseudo device for comunication between user space an kernel is /dev/pf
+
+In pfvar.h "struct pf_pdesc" is declared, where packet description is stored. Stuff like source or destination address from packet header.
+
+Files
+------
+
+User side is located in sbin/pfctl
+Kernel side is located in sys/netpfil/pf
+
+Files in user space:
+
+    parse.y    // Parser of configuration file, yakk language translated into C at compile time
+    pfctl_parser.c // Responsible for parsing and sending configuration to ioctl
+    pfctl_parser.h // heeader file for pfctl_parser
+    pfctl.c // All pfctl options and configurations are written here
+    pfctl.h // header file for pfctl.c
+    pf.os // Operating System fingerprints (the data)
+    pfctl_optimize.c
+    pfctl_qstats.c
+    pfctl_table.c
+    pf_print_state.c
+    pfctl_altq.c // ALTQ scheduler
+    pfctl_osfp.c // OS fingerprinting (algorithms)
+    pfctl_radix.c
+    pfctl.8 // man page for pfctl
+
+Files in kernel space:
+
+    pf.c    // main kernel side of pf
+    pf.h    // header file
+    pf_ioctl.c  // code responsible for COPYIN and similar ioctl commands inside PF
+    if_pflog.c // ifconfig pflog0
+    if_pfsync.c // sync 2 PF firewalls
+    in4_cksum.c
+    pf_altq.h // ALTQ scheduler
+    pf_if.c
+    pf_lb.c
+    pf_mtag.h
+    pf_norm.c // Normalization of packets
+    pf_osfp.c // OS fingerprinting
+    pf_ruleset.c // defined main anchor and main ruleset
+    pf_table.c
+
+
+Crucial concepts:
+------------------
+Files and functions responsible for communication between kernel and user space are:
+    pf_ioctl.c, pfvar.h, ioctl, pfctl_trans, /dev/pf
+
+pfctl_trans is one of the functions calling ioctl for communication between kernel and user space.
+
+Once packet is receieved depending on the type of the protocol, it is used with switch case to decide how to handle it further.
+That is decided in pf_test in sys/netpfil/pf/pf.c. Aditional functions do the actual testing, like pf_test_tcp, pf_test_udp, etc.
+
+Main configuration file (pf.conf) is considered to be main (or root) anchor (anchor without a parent) with it's own ruleset. If there are aditional anchors
+they are created as child anchors.
+
+
+struct pf_anchor {		//declaration located in sys/net/pfvar.h
+   RB_ENTRY(pf_anchor)  entry_global;                                                                                                                                                                                         
+   RB_ENTRY(pf_anchor)  entry_node;                                                                                                                                                                                           
+   struct pf_anchor  *parent;                                                                                                                                                                                                 
+   struct pf_anchor_node  children;                                                                                                                                                                                           
+   char       name[PF_ANCHOR_NAME_SIZE];                                                                                                                                                                                      
+   char       path[MAXPATHLEN];                                                                                                                                                                                               
+   struct pf_ruleset  ruleset;                                                                                                                                                                                                
+   int      refcnt;  /* anchor rules */                                                                                                                                                                                       
+   int      match; /* XXX: used for pfctl black magic */                                                                                                                                                                      
+ };               
+
+struct pf_ruleset {		//declaration located in sys/net/pfvar.h
+   struct {                                                                                                                                                                                                                   
+     struct pf_rulequeue  queues[2];                                                                                                                                                                                          
+     struct {                                                                                                                                                                                                                 
+       struct pf_rulequeue *ptr;                                                                                                                                                                                              
+       struct pf_rule    **ptr_array;                                                                                                                                                                                         
+       u_int32_t    rcount;                                                                                                                                                                                                   
+       u_int32_t    ticket;                                                                                                                                                                                                   
+       int      open;                                                                                                                                                                                                         
+     }      active, inactive;                                                                                                                                                                                                 
+   }      rules[PF_RULESET_MAX];                                                                                                                                                                                              
+   struct pf_anchor  *anchor;                                                                                                                                                                                                 
+   u_int32_t    tticket;                                                                                                                                                                                                      
+   int      tables;                                                                                                                                                                                                           
+   int      topen;                                                                                                                                                                                                            
+ };                 
+
+struct pf_addr { 		//declaration located in sys/net/pfvar.h
+   union {                                                                                                                                                                                                                    
+     struct in_addr    v4;                                                                                                                                                                                                    
+     struct in6_addr   v6;                                                                                                                                                                                                    
+     u_int8_t    addr8[16];                                                                                                                                                                                                   
+     u_int16_t   addr16[8];                                                                                                                                                                                                   
+     u_int32_t   addr32[4];                                                                                                                                                                                                   
+   } pfa;        /* 128-bit address */   
+
+struct pf_rule //declaration located in sys/net/pfvar.h
+
+pf_addr_dir // pipes **** Proveri ovo, grep ga ne nadje postoji pf_addr, ali nisam siguran na sta si mislio pod pipe ****
+
+kif (kernel interface)
+counters
+
+*mbuff
