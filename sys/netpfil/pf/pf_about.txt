@@ -115,6 +115,7 @@ struct pf_addr { 		//declaration located in sys/net/pfvar.h
    } pfa;        /* 128-bit address */
 
 struct pf_rule //declaration located in sys/net/pfvar.h
+struct pf_state //declaration located in sys/net/pfvar.h
 
 ------------------------
 Functions
@@ -139,12 +140,6 @@ pf_test_rule(struct pf_rule **rm, struct pf_state **sm, int direction,
 
     Declared in pf.c and responsible for testing if rule applies to the received packet
 
-pf_get_pool(char *anchor, u_int32_t ticket, u_int8_t rule_action,
-    u_int32_t rule_number, u_int8_t r_last, u_int8_t active,
-    u_int8_t check_ticket)
-
-    Declared in pf_ioctl.c
-
 pfioctl(struct cdev *dev, u_long cmd, caddr_t addr, int flags, struct thread *td)
 
     Declared in pf_ioctl.c
@@ -156,10 +151,23 @@ Other
 
 For control of pf use pfctl, and for dummynet control of pipes queues and similar use dnctl
 
-pf_addr_dir // pipes
+struct pf_rule_actions { // declared in sys/net/pfvar.h used for dummynet pipes
+       u_int16_t       qid;
+       u_int16_t       pqid;
+       u_int32_t       pdnpipe;
+       u_int32_t       dnpipe;
+       u_int8_t        flags;
+};
 
 kif (kernel interface)
 
-counters
+
+
+Every packet increses the counters (in/out and passed/dropped) // in sys/netpfil/pf.c
+
+kif->pfik_bytes[0][dir == PF_OUT][action != PF_PASS] += pd.tot_len;
+kif->pfik_packets[0][dir == PF_OUT][action != PF_PASS]++;
+
+
 
 *mbuff // mbuff represents an array of pointers on packets
