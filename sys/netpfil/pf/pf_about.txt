@@ -72,6 +72,24 @@ In pfvar.h "struct pf_pdesc" is declared, where packet description is stored. St
 
 After config is parsed rules are passed to kernel with ioctl calls. Pseudo device for comunication between user space an kernel is /dev/pf
 
+pf_test() (and it’s IPv6 pf_test6()) gets called through
+pf_check_in()/pf_check_out()/… in pf_ioctl.c. Those functions get called
+through the pfil(9) framework.
+
+pfil(9) is the abstraction layer used to allow us to have multiple different
+firewalls (even at the same time…).
+
+Once we hit pf_test() we normalise, identify the protocol (roughly, TCP, UDP
+or ICMP) and do state lookups. (STATE_LOOKUP() in e.g. pf_test_state_tcp()).
+
+Only if there’s no state for the packet do we evaluate rules, in
+pf_test_rule().
+
+That is done in while loop (while (r!= NULL)). It first goes to the lowest anchor that exists (youngest child),
+than evaluates rules. If no rule is matched within the given anchor (which is checked if r == NULL) we pf_step_out_of_anchor()
+and continue the process untill rule is matched.
+
+
 ------------------------
 Structs
 ------------------------
@@ -130,7 +148,9 @@ pf_test(int dir, int pflags, struct ifnet *ifp, struct mbuf **m0, struct inpcb *
     int dir is integer returned from "dev = open("/dev/pf", O_RDWR);"
     m is used as variable of a single packet, so mbuff in this case represents an array of pointers on packets
 
+
 pf_test6(int dir, int pflags, struct ifnet *ifp, struct mbuf **m0, struct inpcb *inp)
+
     Declared in pf.c, similar to pf_test, but for IPv6
 
 pf_test_rule(struct pf_rule **rm, struct pf_state **sm, int direction,
