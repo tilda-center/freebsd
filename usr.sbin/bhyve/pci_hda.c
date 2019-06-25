@@ -1,4 +1,6 @@
 /*-
+ * SPDX-License-Identifier: BSD-2-Clause-FreeBSD
+ *
  * Copyright (c) 2016 Alex Teaca <iateaca@FreeBSD.org>
  * All rights reserved.
  *
@@ -322,15 +324,14 @@ hda_parse_config(const char *opts, const char *key, char *val)
 	char buf[64];
 	char *s = buf;
 	char *tmp = NULL;
-	int len;
+	size_t len;
 	int i;
 
 	if (!opts)
 		return (0);
 
 	len = strlen(opts);
-
-	if (len >= 64) {
+	if (len >= sizeof(buf)) {
 		DPRINTF("Opts too big\n");
 		return (0);
 	}
