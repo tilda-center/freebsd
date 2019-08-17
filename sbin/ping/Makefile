@@ -5,6 +5,7 @@
 
 PACKAGE=runtime
 PROG=	ping
+SRCS=	ping.c utils.c
 MAN=	ping.8
 BINOWN=	root
 BINMODE=4555
@@ -19,9 +20,7 @@ LIBADD+=	cap_dns
 CFLAGS+=-DWITH_CASPER
 .endif
 
-.if !defined(RELEASE_CRUNCH)
 CFLAGS+=-DIPSEC
 LIBADD+=	ipsec
-.endif
 
 .include <bsd.prog.mk>
