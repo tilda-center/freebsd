@@ -295,7 +295,7 @@ trap(struct trapframe *frame)
 			    ("VSX already enabled for thread"));
 			if (!(td->td_pcb->pcb_flags & PCB_VEC))
 				enable_vec(td);
-			if (!(td->td_pcb->pcb_flags & PCB_FPU))
+			if (td->td_pcb->pcb_flags & PCB_FPU)
 				save_fpu(td);
 			td->td_pcb->pcb_flags |= PCB_VSX;
 			enable_fpu(td);
@@ -700,7 +700,6 @@ void
 syscall(struct trapframe *frame)
 {
 	struct thread *td;
-	int error;
 
 	td = curthread;
 	td->td_frame = frame;
@@ -715,8 +714,8 @@ syscall(struct trapframe *frame)
 		    "r"(td->td_pcb->pcb_cpu.aim.usr_vsid), "r"(USER_SLB_SLBE));
 #endif
 
-	error = syscallenter(td);
-	syscallret(td, error);
+	syscallenter(td);
+	syscallret(td);
 }
 
 static int
